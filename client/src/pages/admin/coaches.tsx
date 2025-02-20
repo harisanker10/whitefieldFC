@@ -21,9 +21,12 @@ import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { $api } from "@/http/api";
 import { useToast } from "@/hooks/use-toast";
+import { Link, useNavigate, useRoutes } from "react-router";
 
 export function CoachesPage() {
-  const [coaches, setCoaches] = useState<{ name: string; email: string }[]>([]);
+  const [coaches, setCoaches] = useState<
+    { name: string; email: string; id: string }[]
+  >([]);
   useEffect(() => {
     $api("coaches", { method: "GET" }).then(
       (coaches) => coaches && setCoaches(coaches),
@@ -47,8 +50,9 @@ export function CoachesPage() {
 function CoachTable({
   coaches,
 }: {
-  coaches: { name: string; email: string }[];
+  coaches: { name: string; email: string; id: string }[];
 }) {
+  const navigate = useNavigate();
   return (
     <Table>
       <TableHeader>
@@ -59,7 +63,13 @@ function CoachTable({
       </TableHeader>
       <TableBody>
         {coaches.map((coach, i) => (
-          <TableRow key={i}>
+          <TableRow
+            className="cursor-pointer"
+            key={i}
+            onClick={() => {
+              navigate(`/admin/coaches/performance/${coach.id}`);
+            }}
+          >
             <TableCell className="font-medium">{coach.name}</TableCell>
             <TableCell>{coach.email}</TableCell>
           </TableRow>

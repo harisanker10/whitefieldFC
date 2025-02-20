@@ -7,6 +7,7 @@ import { SessionsPage } from "./pages/admin/sessions.tsx";
 import { AdminLayout } from "./layouts/adminLayout.tsx";
 import { CoachesPage } from "./pages/admin/coaches.tsx";
 import { Toaster } from "./components/ui/toaster.tsx";
+import { PerformancePage } from "./pages/admin/performance.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -16,14 +17,13 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="sessions" element={<SessionsPage />} />
           <Route path="coaches" element={<CoachesPage />} />
+          <Route
+            path="coaches/performance/:coachId"
+            element={<PerformancePage />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>
     <Toaster />
   </StrictMode>,
 );
-
-/*
-
- 
- */
