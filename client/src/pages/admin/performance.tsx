@@ -295,6 +295,7 @@ function SessionsCard({
               <TableHead>Date</TableHead>
               <TableHead>Start Time</TableHead>
               <TableHead>End Time</TableHead>
+              <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -309,6 +310,7 @@ function SessionsCard({
                 <TableCell>
                   {new Date(session.endTime).toLocaleTimeString()}
                 </TableCell>
+                <TableCell>{session.status}</TableCell>
               </TableRow>
             ))}
           </TableBody>
