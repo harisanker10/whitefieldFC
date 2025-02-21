@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ENV } from './config/env';
 import { CoachesModule } from './modules/coaches/coaches.module';
 import { AttendancesModule } from './modules/attendances/attendances.module';
+import { EmailsModule } from './modules/emails/emails.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { AttendancesModule } from './modules/attendances/attendances.module';
     SessionsModule,
     CoachesModule,
     AttendancesModule,
+    EmailsModule,
   ],
   controllers: [],
   providers: [],

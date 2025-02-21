@@ -60,7 +60,7 @@ export function SessionsPage() {
     <>
       <div className="w-full flex justify-between">
         <DatePickerButton value={date} onChange={(date) => setDate(date)} />
-        <CreateSessionButton />
+        <CreateSessionButton initialDate={date} />
       </div>
       {sessions.length ? (
         <SessionsTable sessions={sessions} date={date} />
@@ -119,9 +119,9 @@ function SessionsTable({
   );
 }
 
-export function CreateSessionButton() {
+export function CreateSessionButton({ initialDate }: { initialDate?: Date }) {
   const [coaches, setCoaches] = useState<{ id: string; name: string }[]>([]);
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(initialDate || new Date());
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
   const [coachId, setCoachId] = useState("");
