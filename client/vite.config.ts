@@ -5,6 +5,9 @@ import { resolve } from "path";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    allowedHosts: ["whitefieldfc-1.onrender.com"],
+  },
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
