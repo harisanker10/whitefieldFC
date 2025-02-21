@@ -1,4 +1,4 @@
-export type Coache = {
+export type Coach = {
   id: string;
   name: string;
   email: string;

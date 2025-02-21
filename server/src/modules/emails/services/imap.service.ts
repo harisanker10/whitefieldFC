@@ -3,11 +3,11 @@ import {
   OnModuleInit,
   OnModuleDestroy,
   Logger,
-  Catch,
   UseFilters,
 } from '@nestjs/common';
 import * as imaps from 'imap-simple';
 import { ExceptionsFilter } from 'src/common/filters/exception.filter';
+import { formateAngleBracketText } from 'src/common/helpers/formatEmailInAngleBracket';
 import { ENV } from 'src/config/env';
 
 @Injectable()
@@ -32,8 +32,8 @@ export class ImapService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('Initializing Email Listener...');
     await this.startEmailListener();
     await this.listMailboxes();
-    const sentEmails = await this.fetchSentEmails();
-    console.log({ sentEmails });
+    // const sentEmails = await this.fetchSentEmails();
+    // console.log({ sentEmails });
   }
 
   async onModuleDestroy() {
@@ -52,7 +52,6 @@ export class ImapService implements OnModuleInit, OnModuleDestroy {
 
       this.imapConnection.on('mail', async () => {
         this.logger.log('New email received!');
-        await this.fetchUnreadEmails();
       });
     } catch (error) {
       this.logger.error('Error starting IMAP listener', error);
@@ -65,44 +64,53 @@ export class ImapService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {}
   }
 
-  private async fetchUnreadEmails() {
+  async fetchUnreadEmails(sinceDate = new Date('2025-02-02')) {
     try {
-      const searchCriteria = ['UNSEEN'];
+      const searchCriteria = ['ALL', ['SINCE', sinceDate]];
       const fetchOptions = { bodies: ['HEADER', 'TEXT'], markSeen: false };
 
       const messages = await this.imapConnection.search(
         searchCriteria,
         fetchOptions,
       );
-      return messages
-        .filter((msg) => {
-          const subject = msg.parts.find((p) => p.which === 'HEADER')?.body
-            .subject[0];
-          if (typeof subject === 'string') {
-            return subject.toLowerCase().includes('whitefieldfc');
-          }
-        })
-        .map((msg) => {
-          const from = msg.parts.find((p) => p.which === 'HEADER')?.body
-            .from[0];
-          const subject = msg.parts.find((p) => p.which === 'HEADER')?.body
-            .subject[0];
-          const body = msg.parts.find((p) => p.which === 'TEXT')?.body;
-          return {
-            from,
-            subject,
-            body,
-          };
-        });
+      return messages.map((msg) => {
+        console.log({ msg: JSON.stringify(msg) });
+
+        const header =
+          msg &&
+          msg.parts &&
+          msg.parts.find((part) => part?.which === 'HEADER')?.body;
+
+        const body = msg?.parts?.find((part) => part?.which === 'TEXT')?.body;
+
+        const messageId = header?.['message-id']?.[0] || null;
+        // const messageId = msg.attributes.uid.toString();
+        const date = msg.attributes.date;
+
+        const from = header?.from?.[0];
+        const to = header?.to?.[0];
+        const inReplyTo = header?.['in-reply-to']?.[0];
+        const subject = header?.subject?.[0] || null;
+
+        return {
+          from: formateAngleBracketText(from),
+          to: formateAngleBracketText(to),
+          inReplyTo: formateAngleBracketText(inReplyTo),
+          messageId: formateAngleBracketText(messageId),
+          subject,
+          body,
+          date,
+        };
+      });
     } catch (error) {
       this.logger.error('Error fetching emails', error);
     }
   }
 
-  private async fetchSentEmails() {
+  async fetchSentEmails(sinceDate = new Date('Feb 20,2025')) {
     try {
       await this.imapConnection.openBox('[Gmail]/Sent Mail');
-      const searchCriteria = ['ALL', ['SINCE', 'Feb 20, 2025']];
+      const searchCriteria = ['ALL', ['SINCE', sinceDate]];
 
       const fetchOptions = {
         bodies: ['HEADER', 'TEXT', ''],
@@ -114,38 +122,45 @@ export class ImapService implements OnModuleInit, OnModuleDestroy {
         fetchOptions,
       );
 
+      console.log({ totalSentMessages: messages.length });
+
       return messages
         .map((msg) => {
+          console.log({ msg: JSON.stringify(msg) });
+
           const header =
             msg &&
             msg.parts &&
             msg.parts.find((part) => part?.which === 'HEADER')?.body;
+
           const body = msg?.parts?.find((part) => part?.which === 'TEXT')?.body;
 
-          const from = (header?.from[0].match(/<(.*?)>/)[0] as string)
-            .split('<')[1]
-            .split('>')[0];
-          const to = (header?.to[0].match(/<(.*?)>/)[0] as string)
-            .split('<')[1]
-            .split('>')[0];
-          const inReplyTo = header['in-reply-to'][0]
-            .match(/<(.*?)>/)[0]
-            .split('<')[1]
-            .split('>')[0];
-          const subject = header?.subject[0];
+          const messageId = header?.['message-id']?.[0] || null;
+          // const messageId = msg.attributes.uid.toString();
+          const date = msg.attributes.date;
+
+          const from = header?.from?.[0];
+          const to = header?.to?.[0];
+          const inReplyTo = header?.['in-reply-to']?.[0];
+          const subject = header?.subject?.[0] || null;
+
           return {
-            from,
-            to,
-            inReplyTo,
+            from: formateAngleBracketText(from),
+            to: formateAngleBracketText(to),
+            inReplyTo: formateAngleBracketText(inReplyTo),
+            messageId: formateAngleBracketText(messageId),
             subject,
             body,
+            date,
           };
         })
-        .filter((msg) =>
-          (msg.subject as string).toLowerCase().includes('whitefieldfc'),
+        .filter(
+          (msg) =>
+            msg.subject && msg.subject.toLowerCase().includes('whitefieldfc'),
         );
     } catch (err) {
       this.logger.error('Error getting Sent messages', err.name);
+      console.log({ err });
     }
   }
 }

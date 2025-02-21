@@ -10,6 +10,12 @@ export class CoachesRepository {
     private readonly coachModel: Model<Coaches>,
   ) {}
 
+  findByCoachId(coachId: string): Promise<CoachesEntity | null> {
+    return this.coachModel
+      .findOne({ _id: coachId })
+      .then((doc) => doc && doc.toObject<CoachesEntity>());
+  }
+
   findAllCoaches(): Promise<CoachesEntity[]> {
     return this.coachModel
       .find()

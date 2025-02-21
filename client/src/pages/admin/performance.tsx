@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -21,6 +19,8 @@ import {
   Users,
   UserX,
   Calendar,
+  Send,
+  MailCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -33,12 +33,16 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useParams } from "react-router";
+import { EmailEntity } from "@/types/email";
 
 export function PerformancePage() {
   const { coachId } = useParams();
 
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [sentEmails, setSentEmails] = useState<any[]>([]);
+  const [replyEmails, setReplyEmails] = useState<any[]>([]);
+  console.log({ attendances });
   const [coach, setCoach] = useState<{
     name: string;
     email: string;
@@ -55,14 +59,21 @@ export function PerformancePage() {
     $api(`coaches/${coachId}`, { method: "GET" }).then(
       (data) => data && setCoach(data),
     );
+    $api(`emails/sent?coachId=${coachId}`, { method: "GET" }).then(
+      (data) => data && setSentEmails(data),
+    );
+    $api(`emails/replies?coachId=${coachId}`, { method: "GET" }).then(
+      (data) => data && setReplyEmails(data),
+    );
   }, [coachId]);
 
   return (
     <div className="p-8 w-full space-y-6">
       <h1 className="text-3xl font-bold mb-6">Performance Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <AttendanceCard attendances={attendances} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+        <EmailsCard sentEmails={sentEmails} repliedEmails={replyEmails} />
         <PunctualityCard attendances={attendances} />
+        <AttendanceCard attendances={attendances} />
         <SessionsCard sessions={sessions} coach={coach} />
       </div>
     </div>
@@ -118,6 +129,39 @@ function AttendanceCard({ attendances }: { attendances: Attendance[] }) {
               {totalPercentage.toFixed(1)}% Attendance Rate
             </p>
           </>
+        )}
+
+        {attendances.filter((att) => att.status === AttendanceStatus.ABSENT)
+          .length > 0 && (
+          <Table className="mt-10">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Start Time</TableHead>
+                <TableHead>End Time</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {attendances
+                .filter((att) => att.status === AttendanceStatus.ABSENT)
+                .map((att) => (
+                  <TableRow key={att?.session?.id}>
+                    <TableCell>
+                      {att?.session?.startTime &&
+                        new Date(att?.session?.startTime).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {att?.session?.startTime &&
+                        new Date(att?.session?.startTime).toLocaleTimeString()}
+                    </TableCell>
+                    <TableCell>
+                      {att?.session?.endTime &&
+                        new Date(att?.session?.endTime).toLocaleTimeString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
         )}
       </CardContent>
     </Card>
@@ -274,6 +318,39 @@ function SessionsCard({
             Showing 5 of {sessions.length} sessions
           </p>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmailsCard({
+  sentEmails,
+  repliedEmails,
+}: {
+  sentEmails: EmailEntity[];
+  repliedEmails: EmailEntity[];
+}) {
+  return (
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-xl font-bold">Emails</CardTitle>
+        <CalendarCheck className="h-5 w-5 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-3 gap-4 pt-4">
+          <AttendanceStatItem
+            icon={<Send className="h-4 w-4" />}
+            label="Emails Sent"
+            value={sentEmails.length}
+            color="text-green-600"
+          />
+          <AttendanceStatItem
+            icon={<MailCheck className="h-4 w-4" />}
+            label="Emails replied"
+            value={repliedEmails.length}
+            color="text-red-600"
+          />
+        </div>
       </CardContent>
     </Card>
   );

@@ -30,6 +30,33 @@ export class AttendancesRepository {
       .then((doc) => doc.toObject<AttendancesEntity>());
   }
 
+  // async findAttendance({
+  //   sessionId,
+  //   coachId,
+  //   attendanceId,
+  // }: {
+  //   sessionId?: string;
+  //   coachId?: string;
+  //   attendanceId?: string;
+  // }): Promise<AttendancesEntity[]> {
+  //   const filter: any = {};
+  //
+  //   if (sessionId) filter.sessionId = new Types.ObjectId(sessionId);
+  //   if (coachId) filter.coachId = new Types.ObjectId(coachId);
+  //   if (attendanceId) filter._id = new Types.ObjectId(attendanceId);
+  //
+  //   const attendances = await this.attendanceModel
+  //     .find(filter)
+  //     .populate('sessionId')
+  //     .then((docs) =>
+  //       docs.length > 0
+  //         ? docs.map((doc) => doc.toObject<AttendancesEntity>())
+  //         : [],
+  //     );
+  //
+  //   return attendances;
+  // }
+
   async findAttendance({
     sessionId,
     coachId,
@@ -39,17 +66,49 @@ export class AttendancesRepository {
     coachId?: string;
     attendanceId?: string;
   }): Promise<AttendancesEntity[]> {
-    const filter: any = {};
+    const pipeline: any[] = [];
 
-    if (sessionId) filter.sessionId = new Types.ObjectId(sessionId);
-    if (coachId) filter.coachId = new Types.ObjectId(coachId);
-    if (attendanceId) filter._id = new Types.ObjectId(attendanceId);
+    if (sessionId) {
+      pipeline.push({
+        $match: { sessionId: new Types.ObjectId(sessionId) },
+      });
+    }
+
+    if (coachId) {
+      pipeline.push({
+        $match: { coachId: new Types.ObjectId(coachId) },
+      });
+    }
+
+    if (attendanceId) {
+      pipeline.push({
+        $match: { _id: new Types.ObjectId(attendanceId) },
+      });
+    }
+
+    pipeline.push({
+      $lookup: {
+        from: 'sessions',
+        localField: 'sessionId',
+        foreignField: '_id',
+        as: 'session',
+      },
+    });
+
+    pipeline.push({
+      $unwind: {
+        path: '$session',
+        preserveNullAndEmptyArrays: true,
+      },
+    });
 
     const attendances = await this.attendanceModel
-      .find(filter)
+      .aggregate(pipeline)
       .then((docs) =>
         docs.length > 0
-          ? docs.map((doc) => doc.toObject<AttendancesEntity>())
+          ? docs.map((doc) => {
+              return doc as AttendancesEntity;
+            })
           : [],
       );
 

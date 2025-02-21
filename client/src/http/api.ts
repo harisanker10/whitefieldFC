@@ -9,6 +9,7 @@ export function $api(
   },
 ) {
   return fetch(`https://whitefieldfc.onrender.com/api/v1/${path}`, {
+    // return fetch(`http://localhost:3000/api/v1/${path}`, {
     method,
     headers: {
       "Content-Type": "application/json",

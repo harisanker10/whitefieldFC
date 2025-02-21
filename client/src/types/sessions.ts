@@ -1,6 +1,7 @@
 export type Session = {
   id: string;
-  coachId: string | undefined;
+  coachId?: string | undefined;
+  coach?: { id: string; name: string; email: string };
   startTime: Date;
   endTime: Date;
   status: SessionStatus;

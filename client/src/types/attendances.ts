@@ -1,6 +1,9 @@
+import { Session } from "@/types/sessions";
+
 export type Attendance = {
   coachId: string;
   sessionId: string;
+  session?: Session;
   status: AttendanceStatus;
   lateInMinutes: number;
 };

@@ -11,5 +11,6 @@ import { CoachesRepository } from './coaches.repository';
   ],
   controllers: [CoachesController],
   providers: [CoachesService, CoachesRepository],
+  exports: [CoachesRepository],
 })
 export class CoachesModule {}
